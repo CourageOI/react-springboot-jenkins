@@ -11,44 +11,21 @@ resource "aws_vpc" "vpc" {
     Name = "vpc"
   }
 }
-resource "aws_internet_gateway" "intgw" {
-  vpc_id = aws_vpc.vpc.id
-}
 
-# Attach internet gateway to VPC
-resource "aws_vpc_attachment" "vpc-att" {
-  vpc_id = aws_vpc.vpc.id
-  internet_gateway_id = aws_internet_gateway.intgw.id
-}
-
-# Create route table resource
-resource "aws_route_table" "pubrt" {
-  vpc_id = aws_vpc.vpc.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.intgw.id
-  }
-}
-
-# Associate route table with public subnet
 resource "aws_subnet" "public_subnet" {
-  cidr_block = "172.31.0.0/22"
-  vpc_id     = aws_vpc.vpc.id
+  cidr_block              = "172.31.0.0/22"
+  vpc_id                  = aws_vpc.vpc.id
+  map_public_ip_on_launch = true
 
   tags = {
     Name = "public_subnet"
   }
 }
-resource "aws_route_table_association" "public" {
-  subnet_id = aws_subnet.public_subnet.id
-  route_table_id = aws_route_table.pubrt.id
-}
-
 
 # Define the security group to allow SSH access
 resource "aws_security_group" "ssh_sg" {
   name_prefix = "ssh_sg"
+  vpc_id      = aws_vpc.vpc.id
 
   ingress {
     from_port   = 22
@@ -56,19 +33,25 @@ resource "aws_security_group" "ssh_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+resource "aws_key_pair" "example_key_pair" {
+  key_name = "my_key_pair"
+  public_key = file("~/.ssh/id_rsa.pub")
 }
 
 # Define the EC2 instance with userdata
 resource "aws_instance" "jenkins_instance" {
-  ami           = "ami-0557a15b87f6559cf"
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.public_subnet.id
+  ami                    = "ami-0557a15b87f6559cf"
+  instance_type          = "t2.micro"
+  key_name               = "my_key_pair"
+  subnet_id              = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.ssh_sg.id]
 
   tags = {
