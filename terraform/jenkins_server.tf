@@ -5,7 +5,7 @@ provider "aws" {
 
 # Define the VPC and subnet to launch the instance in
 resource "aws_vpc" "vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "172.31.0.0/20"
 
   tags = {
     Name = "vpc"
@@ -13,7 +13,7 @@ resource "aws_vpc" "vpc" {
 }
 
 resource "aws_subnet" "public_subnet" {
-  cidr_block = "10.0.1.0/24"
+  cidr_block = "172.31.0.0/22"
   vpc_id     = aws_vpc.vpc.id
 
   tags = {
