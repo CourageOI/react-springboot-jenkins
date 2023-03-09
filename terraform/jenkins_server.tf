@@ -32,11 +32,6 @@ resource "aws_route_table" "pubrt" {
 }
 
 # Associate route table with public subnet
-resource "aws_route_table_association" "public" {
-  subnet_id = aws_subnet.public.id
-  route_table_id = aws_route_table.pubrt.id
-}
-
 resource "aws_subnet" "public_subnet" {
   cidr_block = "172.31.0.0/22"
   vpc_id     = aws_vpc.vpc.id
@@ -45,6 +40,11 @@ resource "aws_subnet" "public_subnet" {
     Name = "public_subnet"
   }
 }
+resource "aws_route_table_association" "public" {
+  subnet_id = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.pubrt.id
+}
+
 
 # Define the security group to allow SSH access
 resource "aws_security_group" "ssh_sg" {
