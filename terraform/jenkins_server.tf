@@ -35,7 +35,7 @@ resource "aws_security_group" "ssh_sg" {
 
 # Define the EC2 instance with userdata
 resource "aws_instance" "jenkins_instance" {
-  ami           = "ami-05b457b541faec0ca"
+  ami           = "ami-0557a15b87f6559cf"
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.ssh_sg.id]
