@@ -11,6 +11,31 @@ resource "aws_vpc" "vpc" {
     Name = "vpc"
   }
 }
+resource "aws_internet_gateway" "intgw" {
+  vpc_id = aws_vpc.vpc.id
+}
+
+# Attach internet gateway to VPC
+resource "aws_vpc_attachment" "vpc-att" {
+  vpc_id = aws_vpc.vpc.id
+  internet_gateway_id = aws_internet_gateway.intgw.id
+}
+
+# Create route table resource
+resource "aws_route_table" "pubrt" {
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.intgw.id
+  }
+}
+
+# Associate route table with public subnet
+resource "aws_route_table_association" "public" {
+  subnet_id = aws_subnet.public.id
+  route_table_id = aws_route_table.pubrt.id
+}
 
 resource "aws_subnet" "public_subnet" {
   cidr_block = "172.31.0.0/22"
@@ -29,6 +54,12 @@ resource "aws_security_group" "ssh_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
