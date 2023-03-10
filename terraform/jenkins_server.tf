@@ -78,6 +78,5 @@ resource "aws_instance" "jenkins_instance" {
   tags = {
     Name = "jenkins_instance"
   }
-
   user_data = file("user_data.sh")
 }
