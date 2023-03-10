@@ -21,6 +21,31 @@ resource "aws_subnet" "public_subnet" {
     Name = "public_subnet"
   }
 }
+resource "aws_internet_gateway" "jenkins_igw" {
+  vpc_id = aws_vpc.vpc.id
+
+  tags = {
+    Name = "my-igw"
+  }
+}
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.jenkins_igw.id
+  }
+
+  tags = {
+    Name = "public-rt"
+  }
+}
+
+resource "aws_route_table_association" "public_rt_association" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
 
 # Define the security group to allow SSH access
 resource "aws_security_group" "ssh_sg" {
@@ -54,13 +79,5 @@ resource "aws_instance" "jenkins_instance" {
     Name = "jenkins_instance"
   }
 
-  user_data = <<-EOF
-              #!/bin/bash
-              sudo apt-get update 
-              sudo apt install -y docker.io &&
-              docker run -p 8080:8080 -p 50000:50000 -d \ 
-              -v jenkins_home:/var/jenkins_home \
-              -v /var/run/docker.sock:/var/run/docker.sock \
-              -v $(which docker):/usr/bin/docker jenkins/jenkins:lts
-              EOF
+  user_data = file("user_data.sh")
 }
