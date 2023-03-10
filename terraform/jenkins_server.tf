@@ -46,23 +46,30 @@ resource "aws_route_table_association" "public_rt_association" {
   route_table_id = aws_route_table.public_rt.id
 }
 
+variable "ingressports" {
+  type    = list(number)
+  default = [8080, 22, 80]
+}
 
 # Define the security group to allow SSH access
-resource "aws_security_group" "ssh_sg" {
-  name_prefix = "ssh_sg"
+resource "aws_security_group" "jenkins_sg" {
+  name_prefix = "jenkins_sg"
   vpc_id      = aws_vpc.vpc.id
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  dynamic "ingress" {
+    for_each = var.ingressports
+    content {
+      protocol    = "tcp"
+      from_port   = ingress.value
+      to_port     = ingress.value
+      cidr_blocks = ["0.0.0.0/0"]
+    }
   }
 
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
@@ -73,18 +80,22 @@ resource "aws_instance" "jenkins_instance" {
   instance_type          = "t2.micro"
   key_name               = "server_login"
   subnet_id              = aws_subnet.public_subnet.id
-  vpc_security_group_ids = [aws_security_group.ssh_sg.id]
+  vpc_security_group_ids = [aws_security_group.jenkins_sg.id]
 
   tags = {
     Name = "jenkins_instance"
   }
-
-  user_data = <<-EOF
-              sudo apt-get update 
-              sudo apt install -y docker.io &&
-              docker run -p 8080:8080 -p 50000:50000 -d \ 
-              -v jenkins_home:/var/jenkins_home \
-              -v /var/run/docker.sock:/var/run/docker.sock \
-              -v $(which docker):/usr/bin/docker jenkins/jenkins:lts
-              EOF
+  provisioner "remote-exec" {
+    inline = [
+      "sudo amazon-linux-extras install epel -y",
+      "sudo yum update -y",
+      "sudo yum install java-1.8.0 -y",
+      "sudo yum remove java-1.7.0-openjdk -y",
+      "sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo",
+      "sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key",
+      "sudo yum install jenkins -y",
+      "sudo service jenkins start",
+      "sudo chkconfig --add jenkins",
+    ]
+  }
 }
