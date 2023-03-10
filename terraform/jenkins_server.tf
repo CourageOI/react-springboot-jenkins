@@ -25,7 +25,7 @@ resource "aws_internet_gateway" "jenkins_igw" {
   vpc_id = aws_vpc.vpc.id
 
   tags = {
-    Name = "my-igw"
+    Name = "jenkins-igw"
   }
 }
 resource "aws_route_table" "public_rt" {
