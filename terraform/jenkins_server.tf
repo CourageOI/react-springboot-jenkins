@@ -77,25 +77,24 @@ resource "aws_security_group" "jenkins_sg" {
 # Define the EC2 instance with userdata
 resource "aws_instance" "jenkins_instance" {
   ami                    = "ami-005f9685cb30f234b"
-  instance_type          = "t2.micro"
+  instance_type          = "t2.medium"
   key_name               = "server_login"
   subnet_id              = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.jenkins_sg.id]
+  user_data              = <<-EOF
+    #!/bin/bash
+    sudo amazon-linux-extras install epel -y
+    sudo yum update -y
+    sudo yum install java-1.8.0 -y
+    sudo yum remove java-1.7.0-openjdk -y
+    sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+    sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+    sudo yum install jenkins -y
+    sudo service jenkins start
+    sudo chkconfig --add jenkins
+  EOF
 
   tags = {
     Name = "jenkins_instance"
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "sudo amazon-linux-extras install epel -y",
-      "sudo yum update -y",
-      "sudo yum install java-1.8.0 -y",
-      "sudo yum remove java-1.7.0-openjdk -y",
-      "sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo",
-      "sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key",
-      "sudo yum install jenkins -y",
-      "sudo service jenkins start",
-      "sudo chkconfig --add jenkins",
-    ]
   }
 }
