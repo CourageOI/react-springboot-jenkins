@@ -80,7 +80,6 @@ resource "aws_instance" "jenkins_instance" {
   }
 
   user_data = <<-EOF
-              #!/bin/bash
               sudo apt-get update 
               sudo apt install -y docker.io &&
               docker run -p 8080:8080 -p 50000:50000 -d \ 
