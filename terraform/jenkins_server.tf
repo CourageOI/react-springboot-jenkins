@@ -48,7 +48,7 @@ resource "aws_route_table_association" "public_rt_association" {
 
 variable "ingressports" {
   type    = list(number)
-  default = [8080, 22, 80]
+  default = [8080, 22]
 }
 
 # Define the security group to allow SSH access
@@ -76,25 +76,31 @@ resource "aws_security_group" "jenkins_sg" {
 
 # Define the EC2 instance with userdata
 resource "aws_instance" "jenkins_instance" {
-  ami                    = "ami-005f9685cb30f234b"
+  ami                    = "ami-0557a15b87f6559cf"
   instance_type          = "t2.micro"
   key_name               = "server_login"
   subnet_id              = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.jenkins_sg.id]
-  user_data              = <<-EOF
-    #!/bin/bash
-    sudo amazon-linux-extras install epel -y
-    sudo yum update -y
-    sudo yum install java-1.8.0 -y
-    sudo yum remove java-1.7.0-openjdk -y
-    sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
-    sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
-    sudo yum install jenkins -y
-    sudo service jenkins start
-    sudo chkconfig --add jenkins
-  EOF
-
+  user_data              = "${file("user_data.sh")}"
   tags = {
     Name = "jenkins_instance"
   }
+}
+
+resource "aws_eip" "jenkins_eip" {
+   # Attaching it to the jenkins_server EC2 instance
+   instance = aws_instance.jenkins_instance.id
+
+   # Making sure it is inside the VPC
+   vpc      = true
+
+   # Setting the tag Name to jenkins_eip
+   tags = {
+      Name = "jenkins_eip"
+   }
+}
+
+output "public_ip" {
+   description = "The public IP address of the Jenkins server"
+   value = aws_eip.jenkins_eip.public_ip
 }
