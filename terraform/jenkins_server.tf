@@ -86,21 +86,3 @@ resource "aws_instance" "jenkins_instance" {
     Name = "jenkins_instance"
   }
 }
-
-resource "aws_eip" "jenkins_eip" {
-   # Attaching it to the jenkins_server EC2 instance
-   instance = aws_instance.jenkins_instance.id
-
-   # Making sure it is inside the VPC
-   vpc      = true
-
-   # Setting the tag Name to jenkins_eip
-   tags = {
-      Name = "jenkins_eip"
-   }
-}
-
-output "public_ip" {
-   description = "The public IP address of the Jenkins server"
-   value = aws_eip.jenkins_eip.public_ip
-}
