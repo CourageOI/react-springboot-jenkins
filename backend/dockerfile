@@ -1,14 +1,5 @@
-# First stage: build the application using a Maven image
-FROM maven:3.8.4-jdk-11-slim AS builder
-WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline
-COPY src/ ./src/
-RUN mvn package -DskipTests
-
-# Second stage: create a minimal runtime image using a smaller base image
 FROM openjdk:11-jdk-slim
 WORKDIR /app
-COPY --from=builder /app/target/myapp.jar ./
+COPY /app/target/myapp.jar ./
 EXPOSE 8020
 CMD ["java", "-jar", "myapp.jar"]
