@@ -3,5 +3,6 @@ wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key |sudo gpg --dea
 sudo sh -c 'echo deb [signed-by=/usr/share/keyrings/jenkins.gpg] http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
 sudo apt update && sudo apt upgrade -y
 sudo apt install default-jre -y
+sudo apt install maven -y
 sudo apt install jenkins -y
 sudo systemctl start jenkins.service
