@@ -2,7 +2,7 @@ pipeline {
     agent any
     tools{
         nodejs 'nodejs'
-        maven 'maven_jva'
+        maven 'maven-jva'
     }
 
     environment{
