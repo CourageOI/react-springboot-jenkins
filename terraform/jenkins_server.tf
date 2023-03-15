@@ -86,3 +86,7 @@ resource "aws_instance" "jenkins_instance" {
     Name = "jenkins_instance"
   }
 }
+
+output "ec2_global_ips" {
+  value = ["${aws_instance.jenkins_instance.*.public_ip}"]
+}
