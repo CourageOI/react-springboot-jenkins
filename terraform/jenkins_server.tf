@@ -81,7 +81,7 @@ resource "aws_instance" "jenkins_instance" {
   key_name               = "server_login"
   subnet_id              = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.jenkins_sg.id]
-  user_data              = "${file("user_data.sh")}"
+#   user_data              = "${file("user_data.sh")}"
   tags = {
     Name = "jenkins_instance"
   }
